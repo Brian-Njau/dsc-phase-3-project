@@ -1,12 +1,3 @@
-Name: Brian Kabugih Njau
-
-Institution: Moringa School
-
-Project: Dsc-Phase-3-Project
-
-Date: 25th May 2023
-
-
 # Introduction
 
 
