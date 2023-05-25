@@ -559,6 +559,17 @@ import joblib
 joblib.dump(forest_model, 'random_forest_model.pkl')
 ```
 
+# Testing Pickled Model
+
+```python
+f = open('random_forest_model.pkl','rb')
+loaded_model = joblib.load(f)
+f.close()
+load_prediction = loaded_model.predict(X_test)
+load_prediction_accuracy = accuracy_score(y_test,load_prediction)
+print(f'Loaded model accuracy: {np.round(load_prediction_accuracy*100,2)}%')
+```
+
 # Recommendation
 
 
