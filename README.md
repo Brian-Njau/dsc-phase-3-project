@@ -1,4 +1,4 @@
-# Introduction
+# Introduction 
 
 
 Tanzania, as a developing country, struggles with providing clean water to its population of over 57,000,000. There are many water points already established in the country, but some are in need of repair while others have failed altogether.
@@ -215,7 +215,7 @@ df.head()
 ## Standardizing Features
 
 ```python
-#Importing Function
+#Importing Module
 from sklearn.preprocessing import StandardScaler
 #Scaling data
 scaler=StandardScaler()
@@ -240,11 +240,11 @@ y=df['status_group'].astype(int)
 X_train,X_test,y_train,y_test=train_test_split(X,y,random_state=42,test_size=0.4)
 ```
 
-> We will be using GridSearchCV as our hyperparameter tuning method and accuracy score as our evaluation metric
+> We will be using GridSearchCV as our hyperparameter tuning method. For evaluation metrics, we will use accuracy, precision, recall and f1score
 
 ```python
 # Importing Tools
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score,classification_report
 from sklearn.model_selection import GridSearchCV
 rs=11
 ```
@@ -261,8 +261,11 @@ def fit_and_test(model):
     test_accuracy=accuracy_score(y_test,test_predictions)
 
     print(f'{str(model)} Results: \
+    \n  \
     \n Train Accuracy: {train_accuracy}\
-    \n Test Accuracy: {test_accuracy}')
+    \n Test Accuracy: {test_accuracy}\
+    \n  \
+    \n {classification_report(y_test,test_predictions)}')
     
 # Function for hyperparameter tuning
 def find_params(model,param_grid):
@@ -273,16 +276,13 @@ def find_params(model,param_grid):
     return (values[i] for i in range(len(values)))
 ```
 
-Note: Tuning cells have been commented after computation to reduce run
-
-
 ## MultiClass Logistic Regressor
 
 
 `Vanilla`
 
 ```python
-#Importing modules
+#Importing module
 from sklearn.linear_model import LogisticRegression
 #Initializing Model
 logistic_model=LogisticRegression(multi_class='multinomial',solver='lbfgs',random_state=rs)
@@ -310,7 +310,7 @@ fit_and_test(logistic_model)
 `Vanilla`
 
 ```python
-#Importing functions
+#Importing module
 from sklearn.tree import DecisionTreeClassifier
 #Initializing Model
 decision_tree_model=DecisionTreeClassifier(max_depth=14)
@@ -336,7 +336,7 @@ fit_and_test(decision_tree_model)
 `Vanilla`
 
 ```python
-#Importing Functions
+#Importing module
 from sklearn.neighbors import KNeighborsClassifier
 # import warnings filter
 from warnings import simplefilter
@@ -366,7 +366,7 @@ fit_and_test(knn_model)
 `Vanilla`
 
 ```python
-#Importing Function
+#Importing module
 from sklearn.ensemble import RandomForestClassifier
 #Initializing Model
 forest_model=RandomForestClassifier()
@@ -450,7 +450,7 @@ fit_and_test(adaboost_model)
 `Vanilla`
 
 ```python
-#Importing Module
+#Importing module
 from sklearn.ensemble import ExtraTreesClassifier
 #Initializing model
 extra_trees_model=ExtraTreesClassifier()
@@ -484,7 +484,7 @@ fit_and_test(extra_trees_model)
 from sklearn.ensemble import GradientBoostingClassifier
 #Initializing model
 gradient_boost_model=GradientBoostingClassifier()
-#Fitting Data
+#Fitting Model
 fit_and_test(gradient_boost_model)
 ```
 
@@ -504,6 +504,37 @@ fit_and_test(gradient_boost_model)
 # fit_and_test(tuned_gradient_boost_model)
 ```
 
+## XG Boost Classifier
+
+
+`Vanilla`
+
+```python
+#Importing Module
+from xgboost import XGBClassifier
+#Initializing model
+xg_boost_model=XGBClassifier(booster=RandomForestClassifier)
+#Fitting and Testing Model
+fit_and_test(xg_boost_model)
+```
+
+`Tuned`
+
+```python
+# xg_param_grid = {
+#     'max_depth': [3, 4, 5],
+#     'learning_rate': [0.1, 0.01, 0.001],
+#     'n_estimators': [100, 500, 1000],
+#     'gamma': [0.5, 1, 1.5]
+# }
+# #Extracting optimal parameters
+# md,lr,n,g=find_params(xg_boost_model,xg_param_grid)
+# #Building tuned model
+# tuned_xg_model=XGBoostClassifier(max_depth=md,learning_rate=lr,n_estimators=n,gamma=g)\
+# #Fitting and Testing model
+# fit_and_test(new_mg)
+```
+
 # Model Selection
 
 
@@ -511,7 +542,7 @@ fit_and_test(gradient_boost_model)
 #### (Receiver Operating Characteristics)
 
 ```python
-#Importing Module
+#Importing module
 import sklearn.metrics as metrics
 #Listing models
 models = [
@@ -522,7 +553,8 @@ models = [
     { 'label': 'Gaussian Bayes', 'model': bayes_model},
     { 'label': 'Adaptive Boosting', 'model': adaboost_model},
     { 'label': 'Extra Trees', 'model': extra_trees_model},
-    { 'label': 'Gradient Boosting', 'model': gradient_boost_model}
+    { 'label': 'Gradient Boosting', 'model': gradient_boost_model},
+    { 'label': 'XG Boost', 'model': xg_boost_model}
 ]
 #Plotting ROC
 plt.figure()
@@ -549,11 +581,26 @@ plt.show()   # Display
 > The **Random Forests** model has the highest `AUC` (0.84) as well as the highest `accuracy score`(86%). We shall therefore be selecting it as our final and best model. **Our model of choice**
 
 
+# Feature Importance
+
+
+Which features impact the model the most?
+
+```python
+heirachy=forest_model.feature_importances_
+plt.figure(figsize=(8,8))
+for ind,feature in enumerate(list(X_test.columns)):
+    plt.barh(feature,heirachy[ind])
+```
+
+> Quantity and Quantity Group, which refer to the quantity of water inside the well, are the most impactful features when determining the status of a well
+
+
 # Pickling the model
 
 ```python
-import pickle
 import joblib
+import pickle
 
 # Save the model as a pickle in a file
 joblib.dump(forest_model, 'random_forest_model.pkl')
@@ -568,6 +615,7 @@ f.close()
 load_prediction = loaded_model.predict(X_test)
 load_prediction_accuracy = accuracy_score(y_test,load_prediction)
 print(f'Loaded model accuracy: {np.round(load_prediction_accuracy*100,2)}%')
+print(classification_report(y_test,load_prediction))
 ```
 
 # Recommendation
